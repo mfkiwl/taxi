@@ -17,7 +17,6 @@ import pytest
 import cocotb_test.simulator
 
 import cocotb
-from cocotb.log import SimLog
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer, Combine
 
@@ -39,7 +38,7 @@ class TB:
     def __init__(self, dut, speed=1000e6):
         self.dut = dut
 
-        self.log = SimLog("cocotb.tb")
+        self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
         self.baset_phy2 = RgmiiPhy(dut.phy2_rgmii_txd, dut.phy2_rgmii_tx_ctl, dut.phy2_rgmii_tx_clk,
