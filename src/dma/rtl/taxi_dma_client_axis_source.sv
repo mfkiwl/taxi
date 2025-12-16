@@ -208,7 +208,7 @@ always_comb begin
 
             if (desc_req.req_ready && desc_req.req_valid) begin
 
-                read_addr_next = desc_req.req_src_addr & ADDR_MASK;
+                read_addr_next = RAM_ADDR_W'(desc_req.req_src_addr & ADDR_MASK);
 
                 if (PART_COUNT > 1) begin
                     read_ram_mask_next = {SEGS_PER_PART{1'b1}} << ((((read_addr_next >> PART_OFFSET_W) & ({PART_COUNT_W{1'b1}})) / PARTS_PER_SEG) * SEGS_PER_PART);
@@ -216,7 +216,7 @@ always_comb begin
                     read_ram_mask_next = '1;
                 end
 
-                axis_cmd_addr_next = desc_req.req_src_addr & ADDR_MASK;
+                axis_cmd_addr_next = RAM_ADDR_W'(desc_req.req_src_addr & ADDR_MASK);
                 axis_cmd_last_cycle_offset_next = OFFSET_W'(desc_req.req_len & OFFSET_MASK);
 
                 axis_cmd_tag_next = desc_req.req_tag;

@@ -245,7 +245,7 @@ always_comb begin
             // idle state - load new descriptor to start operation
             desc_req_ready_next = enable && active_count_av_reg;
 
-            addr_next = desc_req.req_dst_addr & ADDR_MASK;
+            addr_next = RAM_ADDR_W'(desc_req.req_dst_addr & ADDR_MASK);
             last_cycle_offset_next = OFFSET_W'(desc_req.req_len & OFFSET_MASK);
 
             tag_next = desc_req.req_tag;
