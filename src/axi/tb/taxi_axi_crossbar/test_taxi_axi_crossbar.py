@@ -198,7 +198,7 @@ if getattr(cocotb, 'top', None) is not None:
         factory = TestFactory(test)
         factory.add_option("idle_inserter", [None, cycle_pause])
         factory.add_option("backpressure_inserter", [None, cycle_pause])
-        # factory.add_option("size", [None]+list(range(max_burst_size)))
+        factory.add_option("size", [None]+list(range(max_burst_size)))
         factory.add_option("s", range(min(s_count, 2)))
         factory.add_option("m", range(min(m_count, 2)))
         factory.generate_tests()
