@@ -179,9 +179,21 @@ assign desc_req.req_ready = desc_req_ready_reg;
 
 assign desc_sts.sts_len = desc_sts_len_reg;
 assign desc_sts.sts_tag = desc_sts_tag_reg;
-assign desc_sts.sts_id = desc_sts_id_reg;
-assign desc_sts.sts_dest = desc_sts_dest_reg;
-assign desc_sts.sts_user = desc_sts_user_reg;
+if (AXIS_ID_EN) begin
+    assign desc_sts.sts_id = desc_sts_id_reg;
+end else begin
+    assign desc_sts.sts_id = '0;
+end
+if (AXIS_DEST_EN) begin
+    assign desc_sts.sts_dest = desc_sts_dest_reg;
+end else begin
+    assign desc_sts.sts_dest = '0;
+end
+if (AXIS_USER_EN) begin
+    assign desc_sts.sts_user = desc_sts_user_reg;
+end else begin
+    assign desc_sts.sts_user = '0;
+end
 assign desc_sts.sts_error = 4'd0;
 assign desc_sts.sts_valid = desc_sts_valid_reg;
 
