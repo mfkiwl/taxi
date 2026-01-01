@@ -16,6 +16,7 @@ Authors:
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
 #include <linux/ptp_clock_kernel.h>
+#include <net/devlink.h>
 
 #define DRIVER_NAME "cndm"
 #define DRIVER_VERSION "0.1"
@@ -122,14 +123,21 @@ struct cndm_cpl {
 	__u8 phase;
 };
 
+// cndm_devlink.c
+struct devlink *cndm_devlink_alloc(struct device *dev);
+void cndm_devlink_free(struct devlink *devlink);
+
+// cndm_netdev.c
 irqreturn_t cndm_irq(int irqn, void *data);
 struct net_device *cndm_create_netdev(struct cndm_dev *cdev, int port, void __iomem *hw_addr);
 void cndm_destroy_netdev(struct net_device *ndev);
 
+// cndm_tx.c
 int cndm_free_tx_buf(struct cndm_priv *priv);
 int cndm_poll_tx_cq(struct napi_struct *napi, int budget);
 int cndm_start_xmit(struct sk_buff *skb, struct net_device *ndev);
 
+// cndm_rx.c
 int cndm_free_rx_buf(struct cndm_priv *priv);
 int cndm_refill_rx_buffers(struct cndm_priv *priv);
 int cndm_poll_rx_cq(struct napi_struct *napi, int budget);

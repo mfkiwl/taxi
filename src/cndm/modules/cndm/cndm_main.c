@@ -11,6 +11,7 @@ Authors:
 #include "cndm.h"
 #include <linux/module.h>
 #include <linux/delay.h>
+#include <linux/version.h>
 
 MODULE_DESCRIPTION("Corundum device driver");
 MODULE_AUTHOR("FPGA Ninja");
@@ -20,6 +21,7 @@ MODULE_VERSION(DRIVER_VERSION);
 static int cndm_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
 	struct device *dev = &pdev->dev;
+	struct devlink *devlink;
 	struct cndm_dev *cdev;
 	int ret = 0;
 	int k;
@@ -32,10 +34,11 @@ static int cndm_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	pcie_print_link_status(pdev);
 
-	cdev = devm_kzalloc(dev, sizeof(struct cndm_dev), GFP_KERNEL);
-	if (!cdev)
+	devlink = cndm_devlink_alloc(dev);
+	if (!devlink)
 		return -ENOMEM;
 
+	cdev = devlink_priv(devlink);
 	cdev->pdev = pdev;
 	cdev->dev = dev;
 	pci_set_drvdata(pdev, cdev);
@@ -76,6 +79,12 @@ static int cndm_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto fail_map_bars;
 	}
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+	devlink_register(devlink);
+#else
+	devlink_register(devlink, dev);
+#endif
+
 	cdev->port_count = ioread32(cdev->bar + 0x0100);
 	cdev->port_offset = ioread32(cdev->bar + 0x0104);
 	cdev->port_stride = ioread32(cdev->bar + 0x0108);
@@ -113,6 +122,7 @@ fail_netdev:
 			cdev->ndev[k] = NULL;
 		}
 	}
+	devlink_unregister(devlink);
 	pci_free_irq_vectors(pdev);
 fail_map_bars:
 	if (cdev->bar)
@@ -122,6 +132,7 @@ fail_regions:
 	pci_clear_master(pdev);
 	pci_disable_device(pdev);
 fail_enable_device:
+	cndm_devlink_free(devlink);
 	return ret;
 }
 
@@ -129,6 +140,7 @@ static void cndm_pci_remove(struct pci_dev *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct cndm_dev *cdev = pci_get_drvdata(pdev);
+	struct devlink *devlink = priv_to_devlink(cdev);
 	int k;
 
 	dev_info(dev, DRIVER_NAME " PCI remove");
@@ -140,12 +152,14 @@ static void cndm_pci_remove(struct pci_dev *pdev)
 			cdev->ndev[k] = NULL;
 		}
 	}
+	devlink_unregister(devlink);
 	pci_free_irq_vectors(pdev);
 	if (cdev->bar)
 		pci_iounmap(pdev, cdev->bar);
 	pci_release_regions(pdev);
 	pci_clear_master(pdev);
 	pci_disable_device(pdev);
+	cndm_devlink_free(devlink);
 }
 
 static const struct pci_device_id cndm_pci_id_table[] = {
