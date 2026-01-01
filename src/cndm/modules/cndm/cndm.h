@@ -25,6 +25,9 @@ struct cndm_dev {
 	struct pci_dev *pdev;
 	struct device *dev;
 
+	unsigned int id;
+	char name[16];
+
 	struct net_device *ndev[32];
 
 	void __iomem *bar;

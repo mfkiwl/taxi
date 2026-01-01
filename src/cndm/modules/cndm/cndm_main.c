@@ -18,6 +18,25 @@ MODULE_AUTHOR("FPGA Ninja");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRIVER_VERSION);
 
+static DEFINE_IDA(cndm_instance_ida);
+
+static int cndm_assign_id(struct cndm_dev *cdev)
+{
+	int ret = ida_alloc(&cndm_instance_ida, GFP_KERNEL);
+	if (ret < 0)
+		return ret;
+
+	cdev->id = ret;
+	snprintf(cdev->name, sizeof(cdev->name), DRIVER_NAME "%d", cdev->id);
+
+	return 0;
+}
+
+static void cndm_free_id(struct cndm_dev *cdev)
+{
+	ida_free(&cndm_instance_ida, cdev->id);
+}
+
 static int cndm_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
 	struct device *dev = &pdev->dev;
@@ -42,6 +61,10 @@ static int cndm_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	cdev->pdev = pdev;
 	cdev->dev = dev;
 	pci_set_drvdata(pdev, cdev);
+
+	ret = cndm_assign_id(cdev);
+	if (ret)
+		goto fail_assign_id;
 
 	ret = pci_enable_device_mem(pdev);
 	if (ret) {
@@ -132,6 +155,8 @@ fail_regions:
 	pci_clear_master(pdev);
 	pci_disable_device(pdev);
 fail_enable_device:
+	cndm_free_id(cdev);
+fail_assign_id:
 	cndm_devlink_free(devlink);
 	return ret;
 }
@@ -159,6 +184,7 @@ static void cndm_pci_remove(struct pci_dev *pdev)
 	pci_release_regions(pdev);
 	pci_clear_master(pdev);
 	pci_disable_device(pdev);
+	cndm_free_id(cdev);
 	cndm_devlink_free(devlink);
 }
 
