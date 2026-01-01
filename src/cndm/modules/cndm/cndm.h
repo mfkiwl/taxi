@@ -141,6 +141,9 @@ void cndm_destroy_netdev(struct net_device *ndev);
 // cndm_dev.c
 extern const struct file_operations cndm_fops;
 
+// cndm_ethtool.c
+extern const struct ethtool_ops cndm_ethtool_ops;
+
 // cndm_tx.c
 int cndm_free_tx_buf(struct cndm_priv *priv);
 int cndm_poll_tx_cq(struct napi_struct *napi, int budget);

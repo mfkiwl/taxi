@@ -104,6 +104,7 @@ struct net_device *cndm_create_netdev(struct cndm_dev *cdev, int port, void __io
 	eth_hw_addr_random(ndev);
 
 	ndev->netdev_ops = &cndm_netdev_ops;
+	ndev->ethtool_ops = &cndm_ethtool_ops;
 
 	ndev->hw_features = 0;
 	ndev->features = 0;
