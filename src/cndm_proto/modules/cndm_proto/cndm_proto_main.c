@@ -84,6 +84,9 @@ static int cndm_proto_pci_probe(struct pci_dev *pdev, const struct pci_device_id
 	dev_info(dev, "Port offset: 0x%x", cdev->port_offset);
 	dev_info(dev, "Port stride: 0x%x", cdev->port_stride);
 
+	if (cdev->port_count > ARRAY_SIZE(cdev->ndev))
+		cdev->port_count = ARRAY_SIZE(cdev->ndev);
+
 	for (k = 0; k < cdev->port_count; k++) {
 		struct net_device *ndev;
 
@@ -106,7 +109,7 @@ static int cndm_proto_pci_probe(struct pci_dev *pdev, const struct pci_device_id
 	return 0;
 
 fail_netdev:
-	for (k = 0; k < 32; k++) {
+	for (k = 0; k < ARRAY_SIZE(cdev->ndev); k++) {
 		if (cdev->ndev[k]) {
 			pci_free_irq(pdev, k, cdev->ndev[k]);
 			cndm_proto_destroy_netdev(cdev->ndev[k]);
@@ -133,7 +136,7 @@ static void cndm_proto_pci_remove(struct pci_dev *pdev)
 
 	dev_info(dev, KBUILD_MODNAME " PCI remove");
 
-	for (k = 0; k < 32; k++) {
+	for (k = 0; k < ARRAY_SIZE(cdev->ndev); k++) {
 		if (cdev->ndev[k]) {
 			pci_free_irq(pdev, k, cdev->ndev[k]);
 			cndm_proto_destroy_netdev(cdev->ndev[k]);
