@@ -10,6 +10,8 @@ Authors:
 
 #include "cndm.h"
 
+#include <linux/version.h>
+
 static int cndm_open(struct net_device *ndev)
 {
 	struct cndm_priv *priv = netdev_priv(ndev);
@@ -50,10 +52,30 @@ static int cndm_close(struct net_device *ndev)
 	return 0;
 }
 
+static int cndm_set_mac(struct net_device *ndev, void *addr)
+{
+	struct sockaddr *saddr = addr;
+
+	if (!is_valid_ether_addr(saddr->sa_data))
+		return -EADDRNOTAVAIL;
+
+	netif_addr_lock_bh(ndev);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+	eth_hw_addr_set(ndev, saddr->sa_data);
+#else
+	memcpy(ndev->dev_addr, saddr->sa_data, ETH_ALEN);
+#endif
+	netif_addr_unlock_bh(ndev);
+
+	return 0;
+}
+
 static const struct net_device_ops cndm_netdev_ops = {
 	.ndo_open = cndm_open,
 	.ndo_stop = cndm_close,
 	.ndo_start_xmit = cndm_start_xmit,
+	.ndo_validate_addr = eth_validate_addr,
+	.ndo_set_mac_address = cndm_set_mac,
 };
 
 static int cndm_netdev_irq(struct notifier_block *nb, unsigned long action, void *data)
