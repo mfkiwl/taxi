@@ -210,7 +210,7 @@ struct net_device *cndm_create_netdev(struct cndm_dev *cdev, int port, void __io
 	priv->registered = 1;
 
 	priv->irq_nb.notifier_call = cndm_netdev_irq;
-	priv->irq = cdev->irq[port % cdev->irq_count];
+	priv->irq = &cdev->irq[port % cdev->irq_count];
 	ret = atomic_notifier_chain_register(&priv->irq->nh, &priv->irq_nb);
 	if (ret) {
 		priv->irq = NULL;

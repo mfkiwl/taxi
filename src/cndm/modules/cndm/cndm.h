@@ -40,7 +40,7 @@ struct cndm_dev {
 	struct miscdevice misc_dev;
 
 	int irq_count;
-	struct cndm_irq *irq[CNDM_MAX_IRQ];
+	struct cndm_irq *irq;
 
 	struct net_device *ndev[32];
 

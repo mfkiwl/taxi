@@ -24,29 +24,32 @@ int cndm_irq_init_pcie(struct cndm_dev *cdev)
 	struct pci_dev *pdev = cdev->pdev;
 	struct device *dev = cdev->dev;
 	int ret = 0;
+	int irq_count;
 	int k;
 
-	cdev->irq_count = pci_alloc_irq_vectors(pdev, 1, CNDM_MAX_IRQ, PCI_IRQ_MSI | PCI_IRQ_MSIX);
-	if (cdev->irq_count < 0) {
+	cdev->irq_count = 0;
+
+	irq_count = pci_alloc_irq_vectors(pdev, 1, CNDM_MAX_IRQ, PCI_IRQ_MSI | PCI_IRQ_MSIX);
+	if (irq_count < 0) {
 		dev_err(dev, "Failed to allocate IRQs");
 		return -ENOMEM;
 	}
 
-	for (k = 0; k < cdev->irq_count; k++) {
-		struct cndm_irq *irq;
+	cdev->irq = kvzalloc(sizeof(*cdev->irq) * irq_count, GFP_KERNEL);
+	if (!cdev->irq) {
+		ret = -ENOMEM;
+		dev_err(dev, "Failed to allocate memory");
+		goto fail;
+	}
 
-		irq = kzalloc(sizeof(*irq), GFP_KERNEL);
-		if (!irq) {
-			ret = -ENOMEM;
-			goto fail;
-		}
+	for (k = 0; k < irq_count; k++) {
+		struct cndm_irq *irq = &cdev->irq[k];
 
 		ATOMIC_INIT_NOTIFIER_HEAD(&irq->nh);
 
 		ret = pci_request_irq(pdev, k, cndm_irq_handler, NULL,
 				irq, "%s-%d", cdev->name, k);
 		if (ret < 0) {
-			kfree(irq);
 			ret = -ENOMEM;
 			dev_err(dev, "Failed to request IRQ %d", k);
 			goto fail;
@@ -54,7 +57,7 @@ int cndm_irq_init_pcie(struct cndm_dev *cdev)
 
 		irq->index = k;
 		irq->irqn = pci_irq_vector(pdev, k);
-		cdev->irq[k] = irq;
+		cdev->irq_count++;
 	}
 
 	dev_info(dev, "Configured %d IRQs", cdev->irq_count);
@@ -70,14 +73,14 @@ void cndm_irq_deinit_pcie(struct cndm_dev *cdev)
 	struct pci_dev *pdev = cdev->pdev;
 	int k;
 
-	for (k = 0; k < CNDM_MAX_IRQ; k++)
-	{
-		if (cdev->irq[k]) {
-			pci_free_irq(pdev, k, cdev->irq[k]);
-			kfree(cdev->irq[k]);
-			cdev->irq[k] = NULL;
-		}
-	}
+	for (k = 0; k < cdev->irq_count; k++)
+		pci_free_irq(pdev, k, &cdev->irq[k]);
+
+	cdev->irq_count = 0;
+
+	if (cdev->irq)
+		kvfree(cdev->irq);
+	cdev->irq = NULL;
 
 	pci_free_irq_vectors(pdev);
 }
