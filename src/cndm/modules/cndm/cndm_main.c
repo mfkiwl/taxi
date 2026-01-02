@@ -206,7 +206,7 @@ static int cndm_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	pci_set_master(pdev);
 
-	ret = pci_request_regions(pdev, DRIVER_NAME);
+	ret = pci_request_regions(pdev, cdev->name);
 	if (ret) {
 		dev_err(dev, "Failed to reserve regions");
 		goto fail_regions;
