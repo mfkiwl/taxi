@@ -74,6 +74,9 @@ To facilitate the dual-license model, contributions to the project can only be a
     *  DMA client for AXI stream
     *  DMA interface for AXI
     *  DMA interface for UltraScale PCIe
+    *  DMA descriptor mux
+    *  DMA RAM demux
+    *  DMA interface mux
     *  Segmented SDP RAM
     *  Segmented dual-clock SDP RAM
 *  Ethernet
@@ -126,6 +129,7 @@ To facilitate the dual-license model, contributions to the project can only be a
 *  PCI Express
     *  PCIe AXI lite master
     *  PCIe AXI lite master for Xilinx UltraScale
+    *  MSI shim for Xilinx UltraScale
 *  Primitives
     *  Arbiter
     *  Priority encoder
