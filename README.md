@@ -172,6 +172,7 @@ The Taxi transport library contains many smaller components that can be composed
     *  I2C master
     *  I2C single register
     *  I2C slave
+    *  I2C slave APB master
     *  I2C slave AXI lite master
     *  MDIO master
     *  UART
